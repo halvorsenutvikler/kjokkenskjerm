@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="bilder/ikon-180.png">
+<title>Planlegg uka</title>
+<link rel="stylesheet" href="css/endre.css">
+</head>
+<body>
+<div class="side">
+  <header class="topp">
+    <a class="knapp" href="index.html" id="tilbake"><span aria-hidden="true">‹</span> Til skjermen</a>
+    <div class="tittel">
+      <h1>Planlegg uka</h1>
+      <div class="uketekst">
+        <button type="button" class="pil" id="forrige" aria-label="Forrige uke">‹</button>
+        <span id="uketekst"></span>
+        <button type="button" class="pil" id="neste" aria-label="Neste uke">›</button>
+      </div>
+    </div>
+    <span class="lagret" id="lagret" aria-live="polite"></span>
+    <button type="button" class="knapp hoved" id="lagre">Lagre uka</button>
+  </header>
+
+  <div class="to-kol">
+    <div class="kort">
+      <label for="heiarop" class="felt-tittel">Ukas heiarop</label>
+      <div class="felt"><input id="heiarop" type="text" maxlength="40" autocomplete="off" placeholder="f.eks. Hvordan går det med deg?"><span class="teller" id="heiarop-teller"></span></div>
+      <div class="hjelp">Vises nederst på skjermen hele uka.</div>
+    </div>
+    <div class="tips">
+      <div class="felt-tittel">Slik får alt plass</div>
+      <ul>
+        <li>Skriv kort: ca. 10 tegn per linje, maks 2 linjer (ca. 20 tegn) per felt.</li>
+        <li>Del ord på 10+ tegn med bindestrek: <i>Fiske-grateng</i>, <i>Foreldre-samtale</i>.</li>
+        <li>Klokkeslett først: <i>18: Mamma kurs</i>. Hendelser med klokkeslett sorteres etter tid.</li>
+        <li>Maks 3 hendelser per dag. Faste hendelser teller med.</li>
+        <li>Heiarop: maks 5 ord.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tabell">
+    <div class="rad hode"><div>Dag</div><div>Leverer</div><div>Henter</div><div>Middag</div><div>Hendelser (maks 3)</div></div>
+    <div id="dager"></div>
+  </div>
+
+  <footer class="bunn">
+    <button type="button" class="knapp" id="tom">Tøm uka (ny uke)</button>
+    <button type="button" class="knapp" id="kopi">Sikkerhetskopi</button>
+    <label class="knapp" for="hent-kopi">Hent kopi</label>
+    <input type="file" id="hent-kopi" accept=".json,application/json" hidden>
+    <div class="fot-tekst">Faste hendelser legges inn automatisk og teller med i de 3. Alt lagres bare på denne iPaden.</div>
+    <button type="button" class="knapp hoved" id="lagre2">Lagre uka</button>
+  </footer>
+</div>
+
+<script src="js/innstillinger.js"></script>
+<script src="js/felles.js"></script>
+<script src="js/endre.js"></script>
+</body>
+</html>

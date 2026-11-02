@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Uka vår">
+<meta name="theme-color" content="#F4EFE4">
+<link rel="apple-touch-icon" href="bilder/ikon-180.png">
+<link rel="icon" href="bilder/ikon-180.png">
+<title>Uka vår</title>
+<link rel="preload" href="fonts/londrina-solid-latin-900-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/fredoka-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/skjerm.css">
+</head>
+<body>
+<div id="scene">
+  <div class="klokke" id="klokke" aria-label="Klokke"></div>
+
+  <div class="ukestempel">
+    <div class="ring"></div>
+    <div class="tekst"><div class="ukeord">uke</div><div class="nr" id="ukenr"></div></div>
+  </div>
+
+  <section class="vaerboks" aria-label="Været">
+    <div class="vask"></div>
+    <div class="ramme"></div>
+    <div class="innhold" id="vaer"><div class="ingen-data">Henter været …</div></div>
+  </section>
+
+  <main class="uke" id="uke" aria-label="Ukeplan"></main>
+
+  <div class="kilde" id="kilde">Vær: MET Norge</div>
+
+  <div class="heiarop" id="heiarop" hidden>
+    <div class="ramme"></div>
+    <div class="tekst"><span id="heia-stjerne"></span><span class="etikett">Ukas heiarop:</span><span class="rop" id="rop"></span><span id="heia-hjerte"></span></div>
+  </div>
+
+  <a class="endre" href="endre.html" id="endre">Endre</a>
+</div>
+
+<script src="js/innstillinger.js"></script>
+<script src="js/felles.js"></script>
+<script src="js/skjerm.js"></script>
+</body>
+</html>
