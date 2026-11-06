@@ -18,10 +18,10 @@
 <div id="scene">
   <div class="klokke" id="klokke" aria-label="Klokke"></div>
 
-  <div class="ukestempel">
-    <div class="ring"></div>
-    <div class="tekst"><div class="ukeord">uke</div><div class="nr" id="ukenr"></div></div>
-  </div>
+  <button type="button" class="ukestempel" id="ukestempel" aria-label="Ukas småjobber">
+    <span class="ring" id="ring"></span>
+    <span class="tekst" id="stempeltekst"><span class="ukeord">uke</span><span class="nr" id="ukenr"></span></span>
+  </button>
 
   <section class="vaerboks" aria-label="Været">
     <div class="vask"></div>
@@ -35,10 +35,18 @@
 
   <div class="heiarop" id="heiarop" hidden>
     <div class="ramme"></div>
-    <div class="tekst"><span id="heia-stjerne"></span><span class="etikett">Ukas heiarop:</span><span class="rop" id="rop"></span><span id="heia-hjerte"></span></div>
+    <div class="tekst"><span id="heia-stjerne"></span><span class="rop" id="rop"></span><span id="heia-hjerte"></span></div>
   </div>
 
   <a class="endre" href="endre.html" id="endre">Endre</a>
+
+  <div class="panel-bakgrunn" id="panel" hidden>
+    <div class="panel" role="dialog" aria-modal="true" aria-labelledby="panel-tittel">
+      <div class="panel-topp"><h2 id="panel-tittel">Ukas småjobber</h2><span id="panel-status"></span></div>
+      <div id="panel-liste"></div>
+      <div class="panel-bunn"><button type="button" class="panel-lukk" id="panel-lukk">Lukk</button></div>
+    </div>
+  </div>
 </div>
 
 <script src="js/innstillinger.js"></script>

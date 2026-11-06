@@ -10,11 +10,18 @@
   var VAER_NOKKEL = "kjokkenskjerm.vaer";
 
   /* ================= Skalering til skjermen ================= */
+  // Skalerer etter høyden og lar ukeplanen bli bredere når skjermen har plass til det
+  // (f.eks. når statuslinja på iPaden tar litt av høyden).
+  var forrigeBredde = 0;
   function skaler() {
     var sc = $("scene"), w = window.innerWidth, h = window.innerHeight;
-    var s = Math.min(w / 1024, h / 768);
-    var x = Math.round((w - 1024 * s) / 2), y = Math.round((h - 768 * s) / 2);
+    var s = h / 768;
+    if (w / s < 1024) s = w / 1024;
+    var bredde = Math.min(1366, Math.max(1024, Math.floor(w / s)));
+    sc.style.width = bredde + "px";
+    var x = Math.round((w - bredde * s) / 2), y = Math.round((h - 768 * s) / 2);
     sc.style.transform = "translate(" + x + "px," + y + "px) scale(" + s + ")";
+    if (bredde !== forrigeBredde) { forrigeBredde = bredde; if ($("uke").firstChild) tilpassTekst(); }
   }
 
   /* ================= Hvilken uke og modus ================= */
@@ -36,9 +43,24 @@
     d[f(5)] = { middag: "Grøt", hendelser: ["09: Hunde-frisør", "Pappa reiser"] };
     d[f(6)] = { middag: "Laks", hendelser: ["Søndags-møte"] };
     var h = {}; h[KS.iso(man)] = "Hvordan går det med deg?";
-    return { versjon: 1, dager: d, heiarop: h };
+    var j = {}, t = Date.now();
+    j[KS.iso(man)] = [
+      { tekst: "Sette på vask", str: "10", hvem: "pappa", dag: 0, barn: false, gjort: t },
+      { tekst: "Sope gangen", str: "10", hvem: "pappa", dag: 1, barn: true, gjort: t },
+      { tekst: "Rense oppvaskmaskinfilter", str: "10", hvem: "mamma", dag: 2, barn: false, gjort: t },
+      { tekst: "Vaske speil og glass", str: "10", hvem: "mamma", dag: 3, barn: false, gjort: null },
+      { tekst: "Passer vinterklærne til barnet?", str: "30", hvem: "mamma", dag: 5, barn: true, gjort: null },
+      { tekst: "Rydde hjørneskapet", str: "stor", hvem: "begge", dag: 6, barn: true, gjort: null }
+    ];
+    return { versjon: 2, dager: d, heiarop: h, jobber: j };
   }
-  function data(man) { return TEST ? testData(man) : KS.les(); }
+  var testLager = {};
+  function data(man) {
+    if (!TEST) return KS.les();
+    var k = KS.iso(man);
+    if (!testLager[k]) testLager[k] = testData(man);
+    return testLager[k];
+  }
 
   /* ================= Klokke og uke ================= */
   var KLOKKEFARGER = ["#2F3FD0", "#D9432B", "#2E3B37", "#2F6B47", "#B23A6E"];
@@ -226,7 +248,7 @@
 
   function tegnUke(n) {
     var man = visningsMandag(n), dt = data(man), idag = KS.iso(n), html = "";
-    $("ukenr").innerHTML = farget(String(KS.ukenummer(man)), ["#B23A6E", "#2F3FD0"], 0);
+    tegnRing(dt, man);
     for (var i = 0; i < 7; i++) {
       var d = KS.leggTil(man, i), dd = KS.dag(dt, d), erIdag = KS.iso(d) === idag;
       var hendelser = KS.alleHendelser(dt, d).map(function (h) { return "<div>" + KS.esc(h) + "</div>"; }).join("");
@@ -263,6 +285,79 @@
     for (i = 0; i < lister.length; i++) krymp(lister[i], lister[i], 15);
   }
 
+  /* ================= Ukas småjobber: ringen og panelet ================= */
+  var RINGFARGER = ["#2F3FD0", "#D9432B", "#2F6B47", "#B23A6E", "#E0A800", "#7C93D8", "#C2391F", "#3E8E68"];
+  var KORTDAG = ["man", "tir", "ons", "tor", "fre", "lør", "søn"];
+  var HVEM = { mamma: "Mamma", pappa: "Pappa", begge: "Begge" };
+  var STR = { "10": "10 min", "30": "30 min", stor: "stor" };
+
+  // Jobbene som faktisk har tekst, med indeksen de har i lagringen
+  function ukasJobber(dt, man) {
+    var ut = [];
+    KS.jobber(dt, man).forEach(function (j, i) { if (j.tekst && j.tekst.trim()) ut.push({ j: j, i: i }); });
+    return ut;
+  }
+
+  function bue(i, n) {
+    var luke = 10, a0 = (-90 + i * 360 / n + luke / 2) * Math.PI / 180, a1 = (-90 + (i + 1) * 360 / n - luke / 2) * Math.PI / 180;
+    var p = function (a) { return (63 + 54 * Math.cos(a)).toFixed(2) + " " + (63 + 54 * Math.sin(a)).toFixed(2); };
+    return "M" + p(a0) + " A54 54 0 " + (a1 - a0 > Math.PI ? 1 : 0) + " 1 " + p(a1);
+  }
+
+  function tegnRing(dt, man) {
+    var liste = ukasJobber(dt, man), n = liste.length, knapp = $("ukestempel");
+    var nr = KS.ukenummer(man), fargetNr = farget(String(nr), ["#B23A6E", "#2F3FD0"], 0);
+    if (!n) {
+      knapp.className = "ukestempel";
+      $("ring").innerHTML = "";
+      $("stempeltekst").innerHTML = '<span class="ukeord">uke</span><span class="nr">' + fargetNr + "</span>";
+      knapp.setAttribute("aria-label", "Uke " + nr + ". Ingen småjobber valgt.");
+      return;
+    }
+    var gjort = liste.filter(function (x) { return x.j.gjort; }).length, deler = "";
+    for (var i = 0; i < n; i++) {
+      // Ringen fylles med klokka: de første feltene farges etter hvert som jobber blir gjort
+      if (n === 1) deler += '<circle cx="63" cy="63" r="54" fill="none" ' + (gjort ? 'stroke="' + RINGFARGER[0] + '" stroke-width="13"' : 'stroke="#2E3B37" stroke-width="3" stroke-dasharray="4 6"') + "/>";
+      else if (i < gjort) deler += '<path d="' + bue(i, n) + '" fill="none" stroke="' + RINGFARGER[i % RINGFARGER.length] + '" stroke-width="13" stroke-linecap="round"/>';
+      else deler += '<path d="' + bue(i, n) + '" fill="none" stroke="#2E3B37" stroke-width="3" stroke-dasharray="4 6" stroke-linecap="round"/>';
+    }
+    knapp.className = "ukestempel har-jobber";
+    $("ring").innerHTML = '<svg width="126" height="126" viewBox="0 0 126 126" aria-hidden="true">' + deler + "</svg>";
+    $("stempeltekst").innerHTML = gjort === n
+      ? '<span class="ferdig-stjerne">' + KS.ikon.stjerne(52) + '</span><span class="ferdig-nr">uke ' + nr + "</span>"
+      : '<span class="ukeord">uke</span><span class="nr">' + fargetNr + "</span>";
+    knapp.setAttribute("aria-label", "Uke " + nr + ". " + gjort + " av " + n + " småjobber gjort. Trykk for å se lista.");
+  }
+
+  var panelTimer;
+  function tegnPanel() {
+    var man = visningsMandag(KS.naa()), dt = data(man), liste = ukasJobber(dt, man);
+    var gjort = liste.filter(function (x) { return x.j.gjort; }).length;
+    $("panel-status").textContent = !liste.length ? "" : gjort === liste.length ? "Alt gjort – godt jobbet!" : gjort + " av " + liste.length + " gjort · trykk for å krysse av";
+    if (!liste.length) { $("panel-liste").innerHTML = '<div class="panel-tom">Ingen småjobber valgt denne uka. De velges på søndagsmøtet under «Endre».</div>'; return; }
+    var nrGjort = 0; // hakene får samme farge som feltet de fyller i ringen
+    $("panel-liste").innerHTML = liste.map(function (x) {
+      var j = x.j, farge = j.gjort ? RINGFARGER[(nrGjort++) % RINGFARGER.length] : "";
+      var hake = j.gjort
+        ? '<svg class="hake" width="32" height="32" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="13" fill="' + farge + '"/><path d="M9 15 L13.5 19.5 L21 11" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        : '<svg class="hake" width="32" height="32" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="12" fill="none" stroke="#2E3B37" stroke-width="2.5" stroke-dasharray="4 4"/></svg>';
+      var info = [HVEM[j.hvem] || "", j.dag === "" || j.dag == null ? "" : KORTDAG[+j.dag], STR[j.str] || ""].filter(Boolean).join(" · ");
+      return '<button type="button" class="jobb' + (j.gjort ? " gjort" : "") + '" data-i="' + x.i + '" aria-pressed="' + (j.gjort ? "true" : "false") + '">' +
+        hake + '<span class="navn">' + KS.esc(j.tekst) + '</span><span class="info">' + (j.barn ? KS.ikon.barn(20, "sammen med barnet") : "") + KS.esc(info) + "</span></button>";
+    }).join("");
+  }
+  function aapnePanel() { tegnPanel(); $("panel").hidden = false; utsettLukking(); }
+  function lukkPanel() { $("panel").hidden = true; clearTimeout(panelTimer); }
+  function utsettLukking() { clearTimeout(panelTimer); panelTimer = setTimeout(lukkPanel, 60000); }
+
+  function veksleJobb(i) {
+    var man = visningsMandag(KS.naa()), dt = TEST ? data(man) : KS.les(), liste = KS.jobber(dt, man);
+    if (!liste[i]) return;
+    liste[i].gjort = liste[i].gjort ? null : Date.now();
+    if (!TEST) KS.skriv(dt);
+    tegnPanel(); tegnRing(dt, man); utsettLukking();
+  }
+
   /* ================= Oppstart og oppdatering ================= */
   var forrigeMinutt = -1, forrigeNokkel = "";
   function tikk() {
@@ -280,6 +375,13 @@
     $("heia-hjerte").innerHTML = KS.ikon.hjerte(22);
     $("endre").insertAdjacentHTML("afterbegin", KS.ikon.blyant(18));
     if (TEST) $("endre").href = "endre.html?test=1";
+    $("ukestempel").addEventListener("click", aapnePanel);
+    $("panel-lukk").addEventListener("click", lukkPanel);
+    $("panel").addEventListener("click", function (e) { if (e.target === $("panel")) lukkPanel(); });
+    $("panel-liste").addEventListener("click", function (e) {
+      var b = e.target.closest ? e.target.closest(".jobb") : null;
+      if (b) veksleJobb(+b.getAttribute("data-i"));
+    });
     skaler();
     tikk();
     hentVaer();

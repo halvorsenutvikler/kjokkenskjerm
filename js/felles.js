@@ -37,9 +37,9 @@ var KS = (function () {
   function les() {
     try {
       var r = JSON.parse(localStorage.getItem(NOKKEL) || "null");
-      if (r && r.dager) return r;
+      if (r && r.dager) { r.heiarop = r.heiarop || {}; r.jobber = r.jobber || {}; return r; }
     } catch (e) { /* tom eller ødelagt – start på nytt */ }
-    return { versjon: 1, dager: {}, heiarop: {} };
+    return { versjon: 2, dager: {}, heiarop: {}, jobber: {} };
   }
   function skriv(data) {
     try { localStorage.setItem(NOKKEL, JSON.stringify(data)); return true; }
@@ -60,14 +60,20 @@ var KS = (function () {
 
   function faste(d) {
     var nr = ukedagIndeks(d) + 1, ut = [];
-    (INNSTILLINGER.fasteHendelser || []).forEach(function (f) { if (f.ukedag === nr) ut.push(f.tekst); });
+    var md = pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+    var sisteSondag = d.getDay() === 0 && leggTil(d, 7).getMonth() !== d.getMonth();
+    (INNSTILLINGER.fasteHendelser || []).forEach(function (f) {
+      if ((f.ukedag && f.ukedag === nr) ||
+          (f.dato && f.dato === md) ||
+          (f.sisteSondag && sisteSondag && f.maaned === d.getMonth() + 1)) ut.push(f.tekst);
+    });
     return ut;
   }
 
-  // Egne + faste hendelser. De med klokkeslett ("18: ...") sorteres først, etter tid.
+  // Egne + faste hendelser. De med klokkeslett ("18: ..." eller "1030: ...") sorteres først, etter tid.
   function alleHendelser(data, d) {
     var liste = faste(d).concat(dag(data, d).hendelser);
-    var tid = function (t) { var m = /^\s*(\d{1,2})(?:[:.](\d{2}))?\s*:/.exec(t); return m ? (+m[1]) * 60 + (+(m[2] || 0)) : null; };
+    var tid = function (t) { var m = /^\s*(\d{1,2})(?:[:.]?(\d{2}))?\s*:/.exec(t); return m ? (+m[1]) * 60 + (+(m[2] || 0)) : null; };
     return liste.map(function (t, i) { return { t: t, tid: tid(t), i: i }; })
       .sort(function (a, b) {
         if (a.tid !== null && b.tid !== null) return a.tid - b.tid;
@@ -107,6 +113,7 @@ var KS = (function () {
     fart: function () { return svg(12, 22, "0 0 14 24", FART); },
     stjerne: function (s) { return svg(s, s, "0 0 24 24", '<path d="M12 2 L14.8 9 L22 9.5 L16.4 14 L18.3 21 L12 17 L5.7 21 L7.6 14 L2 9.5 L9.2 9 Z" fill="#F2C230" stroke="#2E3B37" stroke-width="2" stroke-linejoin="round"/>'); },
     hjerte: function (s) { return svg(s, s * 0.92, "0 0 24 22", '<path d="M12 20 C3 13 4 4 9 4 C11 4 12 6 12 6 C12 6 13 4 15 4 C20 4 21 13 12 20 Z" fill="#D9432B"/>'); },
+    barn: function (s, etikett) { return svg(Math.round(s * 0.9), s, "0 0 18 20", '<circle cx="9" cy="5" r="4" fill="#F2C230" stroke="#2E3B37" stroke-width="1.5"/><path d="M3 19 Q3 10 9 10 Q15 10 15 19 Z" fill="#B23A6E" stroke="#2E3B37" stroke-width="1.5"/>', etikett); },
     blyant: function (s) { return svg(s, s, "0 0 24 24", '<path d="M4 20 L5 15 L16 4 L20 8 L9 19 Z" fill="#F2C230" stroke="#2E3B37" stroke-width="2" stroke-linejoin="round"/><path d="M14 6 L18 10" stroke="#2E3B37" stroke-width="2"/>'); }
   };
 
@@ -154,7 +161,62 @@ var KS = (function () {
     return svg(Math.round(k[3] * s), Math.round(k[4] * s), k[1], k[2], k[0]);
   };
 
+  /* ---------- Småjobber ---------- */
+  function jobber(data, man) { return ((data.jobber || {})[iso(man)] || []); }
+
+  function gjortSiden(data, tekst, fraMs) {
+    var t = tekst.trim().toLowerCase(), funnet = false;
+    Object.keys(data.jobber || {}).forEach(function (k) {
+      data.jobber[k].forEach(function (j) { if (j.gjort && j.gjort >= fraMs && j.tekst.trim().toLowerCase() === t) funnet = true; });
+    });
+    return funnet;
+  }
+
+  // Forslag til en uke: ugjort fra forrige uke + årshjulet for måneden + prosjekter
+  function forslag(data, man) {
+    var torsdag = leggTil(man, 3), mnd = torsdag.getMonth() + 1;
+    var ukeIMnd = Math.min(4, Math.ceil(torsdag.getDate() / 7));
+    var mndStart = new Date(torsdag.getFullYear(), torsdag.getMonth(), 1).getTime();
+    var valgt = {}; jobber(data, man).forEach(function (j) { valgt[j.tekst.trim().toLowerCase()] = true; });
+    var ut = { forrige: [], maaned: [], prosjekt: [] }, sett = {};
+    function legg(gruppe, j) {
+      var k = j.tekst.trim().toLowerCase();
+      if (valgt[k] || sett[k]) return;
+      sett[k] = true; ut[gruppe].push({ tekst: j.tekst, str: j.str || "10", barn: !!j.barn, hvem: j.hvem || "" });
+    }
+    jobber(data, leggTil(man, -7)).forEach(function (j) { if (!j.gjort && j.tekst.trim()) legg("forrige", j); });
+    (INNSTILLINGER.arshjul || []).forEach(function (a) {
+      if (a.engang) { if (!gjortSiden(data, a.tekst, 0)) legg("prosjekt", a); return; }
+      if (a.maaneder && a.maaneder.indexOf(mnd) < 0) return;
+      if (a.hver !== "maaned" && !a.maaneder) return;
+      if (ukeIMnd < (a.uke || 1)) return;
+      if (gjortSiden(data, a.tekst, mndStart)) return;
+      legg("maaned", a);
+    });
+    return ut;
+  }
+
+  // Historikk som CSV (semikolon, slik norsk Excel forventer)
+  function csv(data) {
+    var STR = { "10": "10 min", "30": "30 min", stor: "stor" };
+    var rader = [["uke", "mandag", "oppgave", "storrelse", "hvem", "med_barnet", "planlagt_dag", "gjort", "gjort_dato", "gjort_ukedag"]];
+    Object.keys(data.jobber || {}).sort().forEach(function (k) {
+      var man = fraIso(k);
+      data.jobber[k].forEach(function (j) {
+        if (!j.tekst || !j.tekst.trim()) return;
+        var g = j.gjort ? new Date(j.gjort) : null;
+        rader.push([ukenummer(man), k, j.tekst, STR[j.str] || j.str || "", j.hvem || "", j.barn ? "ja" : "nei",
+          j.dag === "" || j.dag == null ? "" : DAGNAVN[+j.dag], g ? "ja" : "nei",
+          g ? iso(g) + " " + pad(g.getHours()) + ":" + pad(g.getMinutes()) : "", g ? DAGNAVN[ukedagIndeks(g)] : ""]);
+      });
+    });
+    return "﻿" + rader.map(function (r) {
+      return r.map(function (c) { c = String(c); return /[;"\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(";");
+    }).join("\r\n");
+  }
+
   return {
+    jobber: jobber, forslag: forslag, csv: csv,
     DAGNAVN: DAGNAVN, MND: MND, MND_KORT: MND_KORT, param: param,
     naa: naa, pad: pad, iso: iso, fraIso: fraIso, leggTil: leggTil, mandag: mandag,
     ukedagIndeks: ukedagIndeks, ukenummer: ukenummer, erHelg: erHelg,

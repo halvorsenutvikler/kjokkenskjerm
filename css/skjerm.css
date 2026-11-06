@@ -10,7 +10,7 @@ body { -webkit-text-size-adjust: 100%; -webkit-user-select: none; user-select: n
 #scene {
   position: absolute; left: 0; top: 0; width: 1024px; height: 768px; overflow: hidden;
   transform-origin: 0 0;
-  background: #F4EFE4 url(../bilder/papir.jpg) 0 0 / 1024px 768px no-repeat;
+  background: #F4EFE4 url(../bilder/papir.jpg) 0 0 / 100% 100% no-repeat;
   font-family: "Fredoka", sans-serif; font-weight: 500; color: #2E3B37;
 }
 .londrina { font-family: "Londrina Solid", sans-serif; font-weight: 900; }
@@ -21,13 +21,25 @@ body { -webkit-text-size-adjust: 100%; -webkit-user-select: none; user-select: n
   font-family: "Londrina Solid", sans-serif; font-weight: 900; font-size: 142px; line-height: 0.85; letter-spacing: 3px;
   white-space: nowrap;
 }
-.ukestempel { position: absolute; left: 384px; top: 16px; width: 118px; height: 118px; transform: rotate(-4deg); }
+.ukestempel {
+  position: absolute; left: 384px; top: 16px; width: 118px; height: 118px; transform: rotate(-4deg);
+  margin: 0; padding: 0; border: none; background: none; font: inherit; color: inherit; cursor: pointer;
+  -webkit-appearance: none; appearance: none; -webkit-tap-highlight-color: transparent;
+}
 .ukestempel .ring { position: absolute; left: 0; top: 0; right: 0; bottom: 0; border: 3px solid #2E3B37; border-radius: 52% 48% 56% 44% / 46% 54% 44% 56%; }
+.ukestempel .ukeord, .ukestempel .nr { display: block; }
+.ukestempel.har-jobber { transform: none; }
+.ukestempel.har-jobber .ring { left: -4px; top: -4px; right: auto; bottom: auto; width: 126px; height: 126px; border: none; border-radius: 0; }
+.ukestempel.har-jobber .ring svg { display: block; }
 .ukestempel .tekst { position: relative; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
+.ukestempel.har-jobber .ukeord { font-size: 17px; }
+.ukestempel.har-jobber .nr { font-size: 54px; }
+.ukestempel .ferdig-stjerne { display: block; margin-bottom: 2px; }
+.ukestempel .ferdig-nr { font-family: "Londrina Solid", sans-serif; font-weight: 900; font-size: 18px; }
 .ukestempel .ukeord { font-size: 21px; }
 .ukestempel .nr { font-family: "Londrina Solid", sans-serif; font-weight: 900; font-size: 68px; line-height: 0.9; }
 
-.vaerboks { position: absolute; left: 524px; top: 16px; width: 472px; height: 118px; }
+.vaerboks { position: absolute; right: 28px; top: 16px; width: 472px; height: 118px; }
 .vaerboks .vask { position: absolute; left: -10px; top: -10px; width: 492px; height: 138px; background: url(../bilder/vask-vaer.png) 0 0 / 100% 100% no-repeat; }
 .vaerboks .ramme { position: absolute; left: 0; top: 0; right: 0; bottom: 0; border: 3px solid #2E3B37; border-radius: 18px 225px 18px 255px / 255px 18px 225px 18px; }
 .vaerboks .innhold { position: relative; box-sizing: border-box; height: 100%; padding: 10px 16px; display: flex; align-items: center; gap: 10px; }
@@ -44,7 +56,7 @@ body { -webkit-text-size-adjust: 100%; -webkit-user-select: none; user-select: n
 .vaerboks .ingen-data { font-size: 18px; padding-left: 6px; }
 
 /* ---------- Uka ---------- */
-.uke { position: absolute; left: 28px; top: 166px; width: 968px; height: 534px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; }
+.uke { position: absolute; left: 28px; right: 28px; top: 166px; height: 534px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; }
 .dag { position: relative; min-width: 0; }
 .dag .vask { position: absolute; left: -9px; top: -9px; right: -9px; bottom: -9px; background: 0 0 / 100% 100% no-repeat; }
 .dag .ramme { position: absolute; left: 0; top: 0; right: 0; bottom: 0; border: 3px solid #2E3B37; }
@@ -89,7 +101,7 @@ body { -webkit-text-size-adjust: 100%; -webkit-user-select: none; user-select: n
 .knekk { overflow-wrap: break-word; word-wrap: break-word; }
 
 /* ---------- Bunn ---------- */
-.heiarop { position: absolute; left: 200px; top: 714px; width: 624px; height: 44px; }
+.heiarop { position: absolute; left: 50%; margin-left: -312px; top: 714px; width: 624px; height: 44px; }
 .heiarop .ramme { position: absolute; left: 0; top: 0; right: 0; bottom: 0; border: 3px dashed #2E3B37; border-radius: 255px 18px 225px 18px / 18px 225px 18px 255px; }
 .heiarop .tekst { position: relative; height: 100%; display: flex; align-items: center; justify-content: center; gap: 14px; white-space: nowrap; }
 .heiarop .etikett { font-size: 16px; }
@@ -98,8 +110,24 @@ body { -webkit-text-size-adjust: 100%; -webkit-user-select: none; user-select: n
 .kilde { position: absolute; left: 30px; top: 726px; font-size: 12px; line-height: 1.25; color: #56625E; max-width: 160px; }
 
 .endre {
-  position: absolute; left: 870px; top: 716px; width: 126px; height: 42px; box-sizing: border-box;
+  position: absolute; right: 28px; top: 716px; width: 126px; height: 42px; box-sizing: border-box;
   display: flex; align-items: center; justify-content: center; gap: 8px;
   border: 2.5px solid #2E3B37; border-radius: 22px 10px 20px 12px / 12px 20px 10px 22px;
   background: rgba(255,255,255,0.6); color: #2E3B37; text-decoration: none; font-size: 19px;
 }
+
+/* ---------- Ukas småjobber (panelet bak ringen) ---------- */
+.panel-bakgrunn { position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 10; background: rgba(46,59,55,0.35); display: flex; align-items: center; justify-content: center; }
+.panel-bakgrunn[hidden] { display: none; }
+.panel { width: 600px; max-height: 640px; overflow: auto; box-sizing: border-box; padding: 20px 24px; background: #FFFFFF; border: 3px solid #2E3B37; border-radius: 22px 14px 26px 12px / 12px 26px 14px 22px; box-shadow: 4px 6px 0 rgba(46,59,55,0.2); }
+.panel-topp { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.panel h2 { margin: 0; font-size: 24px; font-weight: 600; }
+#panel-status { font-size: 16px; color: #56625E; }
+.jobb { display: flex; align-items: center; gap: 14px; width: 100%; box-sizing: border-box; min-height: 56px; padding: 8px 2px; border: none; border-top: 2px dotted rgba(46,59,55,0.3); background: none; font: inherit; color: #2E3B37; text-align: left; cursor: pointer; }
+.jobb .hake { flex: none; }
+.jobb .navn { flex: 1; font-size: 20px; }
+.jobb .info { display: flex; align-items: center; gap: 4px; font-size: 15px; color: #56625E; white-space: nowrap; }
+.jobb.gjort .navn { color: #56625E; text-decoration: line-through; }
+.panel-tom { font-size: 18px; padding: 16px 0; color: #56625E; }
+.panel-bunn { display: flex; justify-content: flex-end; margin-top: 10px; }
+.panel-lukk { font: inherit; font-size: 18px; color: #2E3B37; background: #FFFFFF; border: 2.5px solid #2E3B37; border-radius: 18px 10px 16px 12px; padding: 8px 22px; cursor: pointer; }

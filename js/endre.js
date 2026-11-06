@@ -65,6 +65,95 @@
     }
     $("dager").innerHTML = html;
     oppdaterAlleTellere();
+    tegnSmajobber();
+  }
+
+  /* ---------- Ukas småjobber ---------- */
+  var STR_VALG = [["10", "10 min"], ["30", "30 min"], ["stor", "Stor"]];
+  var HVEM_VALG = [["", "–"], ["mamma", "Mamma"], ["pappa", "Pappa"], ["begge", "Begge"]];
+  var DAG_VALG = [["", "–"]].concat(KS.DAGNAVN.map(function (n, i) { return [String(i), n.charAt(0).toUpperCase() + n.slice(1)]; }));
+  var STR_TEKST = { "10": "10 min", "30": "30 min", stor: "stor" };
+  var forslagListe = [];
+
+  function valg(liste, verdi) {
+    return liste.map(function (o) { return '<option value="' + o[0] + '"' + (String(verdi == null ? "" : verdi) === o[0] ? " selected" : "") + ">" + o[1] + "</option>"; }).join("");
+  }
+
+  function jobbRad(j, i) {
+    return '<div class="jrad' + (j.gjort ? " er-gjort" : "") + '" data-i="' + i + '">' +
+      '<input type="text" class="j-tekst" maxlength="40" autocomplete="off" aria-label="Jobb" placeholder="Hva skal gjøres?" value="' + KS.esc(j.tekst || "") + '">' +
+      '<select class="j-str" aria-label="Størrelse">' + valg(STR_VALG, j.str || "10") + "</select>" +
+      '<select class="j-hvem" aria-label="Hvem">' + valg(HVEM_VALG, j.hvem) + "</select>" +
+      '<select class="j-dag" aria-label="Dag">' + valg(DAG_VALG, j.dag) + "</select>" +
+      '<label><input type="checkbox" class="j-barn"' + (j.barn ? " checked" : "") + '> ' + KS.ikon.barn(20, "Sammen med barnet") + "</label>" +
+      '<label><input type="checkbox" class="j-gjort"' + (j.gjort ? " checked" : "") + "> Gjort</label>" +
+      '<button type="button" class="j-fjern" aria-label="Fjern jobb">×</button></div>';
+  }
+
+  function tegnSmajobber() {
+    var liste = KS.jobber(data, man);
+    var forrige = KS.jobber(data, KS.leggTil(man, -7)).filter(function (j) { return j.tekst && j.tekst.trim(); });
+    var forrigeGjort = forrige.filter(function (j) { return j.gjort; }).length;
+    $("forrige-uke").textContent = forrige.length ? "Forrige uke: " + forrigeGjort + " av " + forrige.length + " gjort" : "";
+
+    var f = KS.forslag(data, man), html = "";
+    forslagListe = [];
+    [["forrige", "Ikke gjort forrige uke"], ["maaned", "Fra årshjulet denne måneden"], ["prosjekt", "Prosjekter"]].forEach(function (g) {
+      if (!f[g[0]].length) return;
+      html += '<div class="fgruppe"><div class="ftittel">' + g[1] + '</div><div class="chips">' + f[g[0]].map(function (x) {
+        forslagListe.push(x);
+        return '<button type="button" class="chip" data-f="' + (forslagListe.length - 1) + '">+ ' + KS.esc(x.tekst) + " <small>· " + (STR_TEKST[x.str] || "") + "</small></button>";
+      }).join("") + "</div></div>";
+    });
+    $("forslag").innerHTML = html;
+
+    $("jobber").innerHTML = liste.length ? liste.map(jobbRad).join("") :
+      '<div class="hjelp" style="padding: 10px 0">Ingen jobber ennå. Trykk på et forslag over, eller legg til en egen.</div>';
+    oppdaterBelastning();
+  }
+
+  function lesJobber(gamle) {
+    var rader = $("jobber").querySelectorAll(".jrad"), ut = [];
+    for (var i = 0; i < rader.length; i++) {
+      var r = rader[i], g = gamle[+r.getAttribute("data-i")] || {};
+      var gjort = r.querySelector(".j-gjort").checked;
+      ut.push({
+        tekst: r.querySelector(".j-tekst").value.trim(),
+        str: r.querySelector(".j-str").value,
+        hvem: r.querySelector(".j-hvem").value,
+        dag: r.querySelector(".j-dag").value,
+        barn: r.querySelector(".j-barn").checked,
+        gjort: gjort ? (g.gjort || Date.now()) : null
+      });
+    }
+    return ut;
+  }
+
+  function oppdaterBelastning() {
+    var rader = $("jobber").querySelectorAll(".jrad"), antall = 0, per = { "10": 0, "30": 0, stor: 0 };
+    for (var i = 0; i < rader.length; i++) {
+      rader[i].className = "jrad" + (rader[i].querySelector(".j-gjort").checked ? " er-gjort" : "");
+      if (!rader[i].querySelector(".j-tekst").value.trim()) continue;
+      antall++; per[rader[i].querySelector(".j-str").value]++;
+    }
+    var el = $("belastning");
+    if (!antall) { el.textContent = ""; el.className = "hjelp"; return; }
+    var deler = [];
+    if (per["10"]) deler.push(per["10"] + " × 10 min");
+    if (per["30"]) deler.push(per["30"] + " × 30 min");
+    if (per.stor) deler.push(per.stor + " stor" + (per.stor > 1 ? "e" : ""));
+    var mye = antall > S.smajobberAnbefalt || per.stor > 1;
+    el.textContent = antall + " jobber: " + deler.join(", ") + (mye ? ". Mye for én uke, kanskje ta bort én?" : "");
+    el.className = "hjelp" + (mye ? " mye" : "");
+  }
+
+  function endreJobber(fn) {
+    lagre();
+    data = KS.les();
+    data.jobber[KS.iso(man)] = data.jobber[KS.iso(man)] || [];
+    fn(data.jobber[KS.iso(man)]);
+    KS.skriv(data);
+    tegnSmajobber();
   }
 
   /* ---------- Tellere og varsler ---------- */
@@ -104,6 +193,8 @@
       var midd = rader[i].querySelector(".midd input").value.trim();
       data.dager[key] = { lever: valgt("lever"), hent: valgt("hent"), middag: midd, hendelser: hendelser };
     }
+    data.jobber = data.jobber || {};
+    data.jobber[KS.iso(man)] = lesJobber(KS.jobber(data, man));
     data.heiarop = data.heiarop || {};
     var rop = $("heiarop").value.trim();
     if (rop) data.heiarop[KS.iso(man)] = rop; else delete data.heiarop[KS.iso(man)];
@@ -123,6 +214,31 @@
   }
 
   /* ---------- Hendelser ---------- */
+  $("jobber").addEventListener("change", function () { lagre(); oppdaterBelastning(); });
+  $("jobber").addEventListener("input", oppdaterBelastning);
+  $("jobber").addEventListener("click", function (e) {
+    if (!e.target.classList.contains("j-fjern")) return;
+    var i = +e.target.parentNode.getAttribute("data-i");
+    endreJobber(function (liste) { liste.splice(i, 1); });
+  });
+  $("forslag").addEventListener("click", function (e) {
+    var c = e.target.closest ? e.target.closest(".chip") : null; if (!c) return;
+    var x = forslagListe[+c.getAttribute("data-f")];
+    endreJobber(function (liste) { liste.push({ tekst: x.tekst, str: x.str, hvem: x.hvem || "", dag: "", barn: !!x.barn, gjort: null }); });
+  });
+  $("ny-jobb").addEventListener("click", function () {
+    endreJobber(function (liste) { liste.push({ tekst: "", str: "10", hvem: "", dag: "", barn: false, gjort: null }); });
+    var felt = $("jobber").querySelectorAll(".j-tekst"); if (felt.length) felt[felt.length - 1].focus();
+  });
+  $("historikk").addEventListener("click", function () {
+    lagre();
+    var blob = new Blob([KS.csv(KS.les())], { type: "text/csv;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "kjokkenskjerm-historikk-" + KS.iso(KS.naa()) + ".csv";
+    document.body.appendChild(a); a.click(); a.remove();
+  });
+
   $("dager").addEventListener("input", function (e) { if (e.target.type === "text") oppdaterTeller(e.target); });
   $("dager").addEventListener("change", lagre);
   $("heiarop").addEventListener("input", oppdaterHeiarop);
@@ -136,10 +252,11 @@
   $("tilbake").addEventListener("click", function () { lagre(); });
 
   $("tom").addEventListener("click", function () {
-    if (!window.confirm("Tømme alt for uke " + KS.ukenummer(man) + "? Faste hendelser blir stående.")) return;
+    if (!window.confirm("Tømme alt for uke " + KS.ukenummer(man) + ", også småjobbene? Faste hendelser blir stående.")) return;
     data = KS.les();
     for (var i = 0; i < 7; i++) delete data.dager[KS.iso(KS.leggTil(man, i))];
     if (data.heiarop) delete data.heiarop[KS.iso(man)];
+    if (data.jobber) delete data.jobber[KS.iso(man)];
     KS.skriv(data);
     tegn();
   });

@@ -25,22 +25,14 @@
     <button type="button" class="knapp hoved" id="lagre">Lagre uka</button>
   </header>
 
-  <div class="to-kol">
-    <div class="kort">
-      <label for="heiarop" class="felt-tittel">Ukas heiarop</label>
-      <div class="felt"><input id="heiarop" type="text" maxlength="40" autocomplete="off" placeholder="f.eks. Hvordan går det med deg?"><span class="teller" id="heiarop-teller"></span></div>
-      <div class="hjelp">Vises nederst på skjermen hele uka.</div>
-    </div>
-    <div class="tips">
-      <div class="felt-tittel">Slik får alt plass</div>
-      <ul>
-        <li>Skriv kort: ca. 10 tegn per linje, maks 2 linjer (ca. 20 tegn) per felt.</li>
-        <li>Del ord på 10+ tegn med bindestrek: <i>Fiske-grateng</i>, <i>Foreldre-samtale</i>.</li>
-        <li>Klokkeslett først: <i>18: Mamma kurs</i>. Hendelser med klokkeslett sorteres etter tid.</li>
-        <li>Maks 3 hendelser per dag. Faste hendelser teller med.</li>
-        <li>Heiarop: maks 5 ord.</li>
-      </ul>
-    </div>
+  <div class="tips">
+    <div class="felt-tittel">Slik får alt plass</div>
+    <ul>
+      <li>Skriv kort: ca. 10 tegn per linje, maks 2 linjer (ca. 20 tegn) per felt.</li>
+      <li>Del ord på 10+ tegn med bindestrek: <i>Fiske-grateng</i>, <i>Foreldre-samtale</i>.</li>
+      <li>Klokkeslett først: <i>18: Mamma kurs</i>. Hendelser med klokkeslett sorteres etter tid.</li>
+      <li>Maks 3 hendelser per dag. Faste hendelser teller med.</li>
+    </ul>
   </div>
 
   <div class="tabell">
@@ -48,12 +40,33 @@
     <div id="dager"></div>
   </div>
 
+  <section class="kort smajobber" aria-labelledby="sj-tittel">
+    <div class="sj-topp"><h2 id="sj-tittel">Ukas småjobber</h2><span class="hjelp" id="forrige-uke"></span></div>
+    <div class="hjelp">5–6 jobber er nok, og minst én sammen med barnet. Kommer dere på noe underveis i møtet, legg det inn her som en jobb, så er det tatt vare på.</div>
+    <div id="forslag"></div>
+    <div class="jtabell">
+      <div class="jrad jhode"><div>Jobb</div><div>Størrelse</div><div>Hvem</div><div>Dag</div><div>Med barnet</div><div>Gjort</div><div></div></div>
+      <div id="jobber"></div>
+    </div>
+    <div class="sj-bunn">
+      <button type="button" class="knapp" id="ny-jobb">+ Legg til egen jobb</button>
+      <span class="hjelp" id="belastning" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <section class="kort">
+    <label for="heiarop" class="felt-tittel">Til slutt: ukas heiarop</label>
+    <div class="felt"><input id="heiarop" type="text" maxlength="40" autocomplete="off" placeholder="f.eks. Hvordan går det med deg?"><span class="teller" id="heiarop-teller"></span></div>
+    <div class="hjelp">Maks 5 ord. Vises nederst på skjermen hele uka.</div>
+  </section>
+
   <footer class="bunn">
-    <button type="button" class="knapp" id="tom">Tøm uka (ny uke)</button>
+    <button type="button" class="knapp" id="tom">Tøm uka</button>
     <button type="button" class="knapp" id="kopi">Sikkerhetskopi</button>
     <label class="knapp" for="hent-kopi">Hent kopi</label>
     <input type="file" id="hent-kopi" accept=".json,application/json" hidden>
-    <div class="fot-tekst">Faste hendelser legges inn automatisk og teller med i de 3. Alt lagres bare på denne iPaden.</div>
+    <button type="button" class="knapp" id="historikk">Historikk (CSV)</button>
+    <div class="fot-tekst">Alt lagres bare på denne iPaden.</div>
     <button type="button" class="knapp hoved" id="lagre2">Lagre uka</button>
   </footer>
 </div>

@@ -10,6 +10,26 @@ Det dere skriver inn, lagres **bare på iPaden**. Koden ligger åpent på GitHub
 
 ---
 
+## Nytt i versjon 2 (november 2026)
+
+- **Ukas småjobber:** velges nederst i søndagsskjemaet. Ringen rundt ukenummeret fylles etter hvert som jobbene blir gjort. Trykk på ringen for å krysse av. Når alt er gjort, blir uketallet en stjerne.
+- **Forslag fra årshjulet** og jobber som ikke ble gjort forrige uke, vises som knapper i skjemaet.
+- **Historikk (CSV):** laster ned alle småjobbene som en fil du kan åpne i Excel.
+- **Faste datoer:** røykvarslere, klokkebytte, klær i barnehagen og frist for skattemeldingen kommer automatisk.
+- Skjermen bruker hele bredden, og heiaropet står uten etikett.
+- Klokkeslett kan også skrives uten kolon i midten: «1030: Møte».
+
+### Slik oppdaterer du fra versjon 1
+1. Pakk ut den nye zip-fila.
+2. På GitHub, i repoet `kjokkenskjerm`: **Add file → Upload files**.
+3. Dra inn alt innholdet i mappen, akkurat som første gang. Filer med samme navn blir erstattet. Bildene og skriftene er uendret, men det gjør ikke noe at de blir med.
+4. **Commit changes**, f.eks. med meldingen «Versjon 2».
+5. Vent ca. 10 minutter. Lukk så appen på iPaden (sveip den bort) og åpne den igjen fra Hjem-skjermen.
+
+Alt dere har skrevet inn, blir liggende. Det ligger på iPaden, ikke på GitHub.
+
+---
+
 ## Del 1 – Legg siden ut på GitHub (ca. 15 minutter, gjøres på Mac/PC)
 
 ### 1. Opprett et repository
@@ -64,7 +84,17 @@ Det dere skriver inn, lagres **bare på iPaden**. Koden ligger åpent på GitHub
 - Maks 3 hendelser per dag. Faste hendelser teller med.
 - Blir noe likevel for langt, krymper skjermen skriften litt i stedet for å gå utenfor rammen.
 
+**Ukas småjobber (nederst i skjemaet):**
+- Trykk på et forslag for å legge det til, eller «+ Legg til egen jobb».
+- Velg størrelse (10 min, 30 min, stor), hvem, dag, og om barnet er med.
+- 5–6 jobber er nok. Skjemaet sier fra hvis det blir mye.
+- Kommer dere på noe underveis i møtet, legg det inn som en jobb.
+- I løpet av uka krysser dere av ved å trykke på ringen rundt ukenummeret på skjermen.
+- Det som ikke blir gjort, dukker opp som forslag neste søndag.
+
 **Sikkerhetskopi:** «Sikkerhetskopi» laster ned en liten fil med alt dere har skrevet. «Hent kopi» legger den inn igjen.
+
+**Historikk (CSV):** én linje per småjobb: uke, jobb, størrelse, hvem, planlagt dag, om den ble gjort og når.
 
 ---
 
@@ -78,6 +108,14 @@ Det dere skriver inn, lagres **bare på iPaden**. Koden ligger åpent på GitHub
 ```
 
 (ukedag 1 = mandag … 7 = søndag). Behold kommaene mellom linjene.
+
+Årshjulet ligger i samme fil, under `arshjul`. Hver linje er ett forslag, for eksempel:
+
+```js
+{ tekst: "Vaske vinduer", str: "stor", maaneder: [5] },
+```
+
+Dekkskift er ikke med ennå. Legg det til hvis dere har bil.
 
 ### Når kommer endringen fram på iPaden?
 - Automatisk hver natt kl. 03:30, da laster skjermen seg selv på nytt.
